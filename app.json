@@ -1,0 +1,9 @@
+{
+  "titolo": "Rocce In Tasca PWA V1.5 Completo",
+  "versione": "1.0",
+  "orientamento": "portrait",
+  "permessi": [
+    "ACCESS_FINE_LOCATION",
+    "ACCESS_COARSE_LOCATION"
+  ]
+}
