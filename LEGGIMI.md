@@ -1,6 +1,6 @@
-# Rocce In Tasca PWA V1.5 Completo
+# Simulatore GEA PWA V5.13
 
-App Android generata con **Crea APK** (by Lollo ®2026) dall'app HTML `Rocce_in_tasca_PWA_v1.5_completo.zip` (46 file), pagina di avvio `index.html`.
+App Android generata con **Crea APK** (by Lollo ®2026) dall'app HTML `Simulatore_GEA_PWA_v5.13.zip` (10 file), pagina di avvio `index.html`.
 
 ## Struttura
 - `www/` — la tua app HTML, intatta: viene messa dentro l'APK
@@ -20,4 +20,4 @@ App Android generata con **Crea APK** (by Lollo ®2026) dall'app HTML `Rocce_in_
 - L'app gira su `https://localhost` dentro l'APK: usa percorsi relativi, non `file://`.
 - `localStorage` e IndexedDB funzionano e restano tra un aggiornamento e l'altro (stessa chiave di firma).
 
-Pacchetto: `org.lollo.scriptesempio` · versione 1.0
+Pacchetto: `org.lollo.quiz` · versione 1.1

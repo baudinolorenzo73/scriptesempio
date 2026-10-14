@@ -1,9 +1,6 @@
 {
-  "titolo": "Rocce In Tasca PWA V1.5 Completo",
-  "versione": "1.0",
+  "titolo": "Simulatore GEA PWA V5.13",
+  "versione": "1.1",
   "orientamento": "portrait",
-  "permessi": [
-    "ACCESS_FINE_LOCATION",
-    "ACCESS_COARSE_LOCATION"
-  ]
+  "permessi": []
 }

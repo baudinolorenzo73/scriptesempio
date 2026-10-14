@@ -1,8 +1,8 @@
 {
-  "name": "scriptesempio",
+  "name": "quiz",
   "version": "1.0.0",
   "private": true,
-  "description": "Rocce In Tasca PWA V1.5 Completo",
+  "description": "Simulatore GEA PWA V5.13",
   "dependencies": {
     "@capacitor/android": "6.2.1",
     "@capacitor/cli": "6.2.1",

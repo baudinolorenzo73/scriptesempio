@@ -87,10 +87,13 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Raccogli APK
+      - name: Raccogli APK (nome come il repository)
         run: |
           mkdir -p bin
-          cp android/app/build/outputs/apk/debug/app-debug.apk bin/scriptesempio-debug.apk
+          REPO="${GITHUB_REPOSITORY#*/}"
+          VER=$(node -p "require('./app.json').versione")
+          cp android/app/build/outputs/apk/debug/app-debug.apk "bin/${REPO}-${VER}.apk"
+          ls -l bin
 
       - name: Salva APK tra gli artifact
         uses: actions/upload-artifact@v4
