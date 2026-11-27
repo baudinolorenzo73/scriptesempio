@@ -212,6 +212,21 @@ a{color:var(--prim)}
 
 <section id="tab-rete" hidden>
   <div class="card">
+    <b>Sentieri del Piemonte</b>
+    <div class="row" style="margin-top:8px">
+      <select id="rpeZona" aria-label="Valle piemontese"><option value="r1">Tutto il Piemonte</option></select>
+      <input id="rpeQ" type="search" aria-label="Codice o descrizione del percorso piemontese" maxlength="80" placeholder="Codice o descrizione, es. TOS210">
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="rpeVai">Cerca nella rete RPE</button>
+      <button class="btn sec" id="rpeMappa">Mappa RPE e CAI</button>
+    </div>
+    <p class="sub">Dati online della <a href="https://www.regione.piemonte.it/web/temi/ambiente-territorio/montagna/patrimonio-outdoor/rete-escursionistica-piemonte" target="_blank" rel="noopener">Rete del patrimonio escursionistico della Regione Piemonte</a>. In mappa, avvicinati per vedere i sentieri regionali e usa «Sentieri CAI qui» per cercare anche nel catasto CAI.</p>
+    <p class="sub" id="rpeSt" role="status"></p>
+    <div id="rpeLista"></div>
+    <button class="btn sec" id="rpeAltro" hidden>Altri risultati</button>
+  </div>
+  <div class="card">
     <b>Sentieri della Valle d’Aosta</b>
     <div class="row" style="margin-top:8px">
       <select id="vdaZona" aria-label="Valle del sentiero"></select>
@@ -1820,8 +1835,8 @@ function aggiornaPercorsiMappa(){
   const n=GM.recs.length;
   $('#gmTit').textContent=(nome?nome+' · ':'')+n+(n===1?' percorso':' percorsi');
 }
-function gmApri(zona=$('#fZona').value,esplora=false){
-  GM.zona=zona;GM.esplora=esplora;
+function gmApri(zona=$('#fZona').value,livello=''){
+  GM.zona=zona;GM.esplora=Boolean(livello);
   aggiornaPercorsiMappa();
   if(!GM.recs.length&&!zona){toast('Nessun percorso da mostrare');return}
   $('#gm').hidden=false;history.pushState({gm:1},'');GM.sel=null;GM.caiSel=null;GM.cai=[];gmCard();
@@ -1832,7 +1847,7 @@ function gmApri(zona=$('#fZona').value,esplora=false){
     $('#gmBase').onchange=e=>{S.base=e.target.value;LSs('lg_base',S.base);gm.base=S.base;gm.ok=0;gm.err=0;gm.draw()};
     $('#gmOver').onchange=e=>{S.over=e.target.value;LSs('lg_over',S.over);gm.over=S.over;gm.draw()};
     $('#gmCai').onclick=caiCarica;$('#gmCol').onchange=e=>{GM.mode=e.target.value;LSs('lg_gmcol',GM.mode);gmLeg();gm.draw()};$('#gmCmp').onclick=()=>scegliNord(gm);$('#gmZi').onclick=()=>gm.zoomBy(1);$('#gmZo').onclick=()=>gm.zoomBy(-1);$('#gmZf').onclick=gmFit}
-  GM.mode=LSg('lg_gmcol')||'';$('#gmCol').value=GM.mode;gmLeg();gm.base=S.base;gm.over=esplora?'vdasent':S.over;$('#gmBase').value=S.base;$('#gmOver').value=gm.over;
+  GM.mode=LSg('lg_gmcol')||'';$('#gmCol').value=GM.mode;gmLeg();gm.base=S.base;gm.over=livello||S.over;$('#gmBase').value=S.base;$('#gmOver').value=gm.over;
   gm.size();gmFit()}
 function gmChiudi(fromPop){if($('#gm').hidden)return;$('#gm').hidden=true;if(!fromPop&&history.state&&history.state.gm)history.back()}
 $('#bMap').onclick=()=>gmApri();$('#gmBack').onclick=()=>gmChiudi();
@@ -1906,7 +1921,7 @@ $('#vdaVai').onclick=cercaItinerariVda;
 $('#vdaAltro').onclick=mostraItinerariVda;
 $('#vdaZona').onchange=()=>{if(VDA.caricamento)cercaItinerariVda()};
 $('#vdaQ').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();cercaItinerariVda()}};
-$('#vdaMappa').onclick=()=>gmApri($('#vdaZona').value,true);
+$('#vdaMappa').onclick=()=>gmApri($('#vdaZona').value,'vdasent');
 $('#vdaLista').onclick=async e=>{
   const btn=e.target.closest('[data-vda]');
   if(!btn||btn.disabled)return;
@@ -1922,6 +1937,154 @@ $('#vdaLista').onclick=async e=>{
     renderLib();
     toast('Importato: '+rec.nome);
     btn.textContent='Importato';
+  }catch(e){
+    btn.disabled=false;
+    toast('Importazione non riuscita: '+e.message);
+  }
+};
+
+/* Percorsi ufficiali RPE Piemonte (WFS 1.1.0, GML 3.1, EPSG:4326). */
+const RPE_WFS='https://geoservices.csi.it/ms/wfs/rpe/rp-01/rpewfs/wfs_percorsi';
+const RPE_SCHEDA='https://www.geoportale.piemonte.it/geonetwork/serv/api/records/r_piemon:77e9d108-c291-4fcf-ba5b-12c1b3251558';
+const RPE_MAX=201;
+const RPE={richiesta:null,risultati:[],visibili:0,limite:false};
+
+for(const [id,zona] of ZONE){
+  if(zona.gruppo==='Piemonte')$('#rpeZona').add(new Option(zona.nome,id));
+}
+
+function urlPercorsiRpe(zonaId,ricerca){
+  const q=new URLSearchParams({
+    SERVICE:'WFS',VERSION:'1.1.0',REQUEST:'GetFeature',TYPENAME:'Percorsi',
+    SRSNAME:'EPSG:4326',MAXFEATURES:String(RPE_MAX)
+  });
+  const filtri=[];
+  if(zonaId!=='r1'){
+    const [w,s,e,n]=ZONE.get(zonaId).bounds;
+    filtri.push('<ogc:BBOX><ogc:PropertyName>msGeometry</ogc:PropertyName><gml:Envelope srsName="EPSG:4326">'+
+      '<gml:lowerCorner>'+s+' '+w+'</gml:lowerCorner><gml:upperCorner>'+n+' '+e+'</gml:upperCorner></gml:Envelope></ogc:BBOX>');
+  }
+  // I caratteri jolly del servizio restano letterali se digitati dall'utente.
+  for(const parola of ricerca.split(/\s+/).filter(Boolean)){
+    const testo=xe(parola.replace(/[!*?]/g,c=>'!'+c));
+    const campi=['cod_percorso','etichetta','descr_escursionistica'];
+    const alternative=campi.map(c=>'<ogc:PropertyIsLike wildCard="*" singleChar="?" escapeChar="!" matchCase="false">'+
+      '<ogc:PropertyName>'+c+'</ogc:PropertyName><ogc:Literal>*'+testo+'*</ogc:Literal></ogc:PropertyIsLike>');
+    filtri.push('<ogc:Or>'+alternative.join('')+'</ogc:Or>');
+  }
+  const filtro=filtri.length===1?filtri[0]:'<ogc:And>'+filtri.join('')+'</ogc:And>';
+  q.set('FILTER','<ogc:Filter xmlns:ogc="http://www.opengis.net/ogc" xmlns:gml="http://www.opengis.net/gml">'+filtro+'</ogc:Filter>');
+  return RPE_WFS+'?'+q;
+}
+function leggiPercorsiRpe(xml,zonaId){
+  const doc=new DOMParser().parseFromString(xml,'application/xml');
+  if(doc.documentElement?.localName!=='FeatureCollection')throw new Error('Risposta cartografica non valida');
+  const elements=(node,key)=>[...node.getElementsByTagNameNS('*',key)];
+  const features=elements(doc,'Percorsi');
+  const risultati=[];
+  for(const feature of features){
+    const valore=chiave=>elements(feature,chiave)[0]?.textContent.trim()||'';
+    const id=feature.getAttribute('fid')||valore('id');
+    const codice=valore('cod_percorso'),segnavia=valore('etichetta');
+    const nome='RPE '+(segnavia||codice||id);
+    const tracks=[];
+    for(const line of elements(feature,'LineString')){
+      if(line.getAttribute('srsName')!=='EPSG:4326')throw new Error('Coordinate regionali in un formato inatteso');
+      const punti=elements(line,'posList')[0];
+      if(!punti?.textContent.trim())continue;
+      const dim=Number(punti.getAttribute('srsDimension')||'2');
+      const coordinate=punti.textContent.trim().split(/\s+/).map(Number);
+      if(dim!==2||coordinate.length%dim)continue;
+      const pts=[];
+      for(let i=0;i<coordinate.length;i+=dim){
+        // WFS 1.1 con EPSG:4326 restituisce latitudine, longitudine.
+        const lat=coordinate[i],lon=coordinate[i+1];
+        if(Number.isFinite(lat)&&Number.isFinite(lon)&&lat>=43&&lat<=47&&lon>=6&&lon<=10)pts.push([lat,lon,null,null]);
+      }
+      if(pts.length>1)tracks.push({name:nome,pts});
+    }
+    if(!id||!tracks.length)continue;
+    const r={id,nome,codice,segnavia,descr:valore('descr_escursionistica'),difficolta:valore('difficolta'),tracks,wpts:[]};
+    if(zonaId==='r1'||recordInZona(r,zonaId))risultati.push(r);
+  }
+  return {risultati,limite:features.length>=RPE_MAX};
+}
+function filePercorsoRpe(r){return 'rpe-'+slug(r.codice||r.id)+'-'+slug(r.id)+'.gpx'}
+function recordRpe(r){
+  const diff=DIF.find(d=>d===r.difficolta||d.startsWith(r.difficolta+' '))||'';
+  const descr=[r.descr,r.codice&&'Codice RPE: '+r.codice,r.difficolta&&'Difficoltà regionale: '+r.difficolta,
+    'Fonte: Regione Piemonte, Rete del Patrimonio Escursionistico (RPE). Geometria WFS in WGS84 convertita in GPX.',
+    'CC BY 4.0 · https://creativecommons.org/licenses/by/4.0/',RPE_SCHEDA].filter(Boolean).join('\n');
+  return mk({nome:r.nome,diff,descr,luogo:'Piemonte',attivita:'Escursionismo',tags:['RPE Piemonte'],
+    fonte:'RPE Regione Piemonte',url:RPE_SCHEDA,file:filePercorsoRpe(r),tracks:r.tracks});
+}
+function mostraPercorsiRpe(){
+  const box=$('#rpeLista'),fine=Math.min(RPE.visibili+20,RPE.risultati.length);
+  for(let i=RPE.visibili;i<fine;i++){
+    const r=RPE.risultati[i];
+    const dettagli=[r.codice,r.difficolta&&r.difficolta!=='N.D.'?'Difficoltà '+r.difficolta:'',r.descr].filter(Boolean);
+    const item=document.createElement('div');
+    item.className='card';
+    item.dataset.i=i;
+    item.innerHTML='<b>'+esc(r.nome)+'</b><div class="sub">'+dettagli.map(esc).join(' · ')+
+      '</div><div class="row" style="margin-top:8px"><button class="btn sec" data-rpe="vedi">Anteprima</button>'+
+      '<button class="btn" data-rpe="importa">Importa GPX</button></div>';
+    box.append(item);
+  }
+  RPE.visibili=fine;
+  $('#rpeAltro').hidden=fine>=RPE.risultati.length;
+  const numero=RPE.risultati.length;
+  $('#rpeSt').textContent=(numero?numero+' percorsi · mostrati '+fine:'Nessun percorso trovato.')+
+    (RPE.limite?' Il servizio ha raggiunto il limite di ricerca. Restringi la zona o aggiungi un codice.':'');
+}
+async function cercaPercorsiRpe(){
+  RPE.richiesta?.abort();
+  RPE.richiesta=null;
+  const zona=$('#rpeZona').value,testo=$('#rpeQ').value.trim().slice(0,80);
+  $('#rpeLista').replaceChildren();
+  $('#rpeAltro').hidden=true;
+  if(zona==='r1'&&!testo){$('#rpeSt').textContent='Scegli una valle o inserisci un codice o una descrizione.';return}
+  if(!navigator.onLine){$('#rpeSt').textContent='Serve la connessione per consultare la rete RPE.';return}
+  const richiesta=new AbortController();
+  RPE.richiesta=richiesta;
+  const scadenza=setTimeout(()=>richiesta.abort(),25000);
+  $('#rpeSt').textContent='Carico i percorsi del Piemonte…';
+  try{
+    const r=await fetch(urlPercorsiRpe(zona,testo),{signal:richiesta.signal});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const dati=leggiPercorsiRpe(await r.text(),zona);
+    if(RPE.richiesta!==richiesta)return;
+    const exact=r=>testo&&[norm(r.codice),norm(r.segnavia)].includes(norm(testo))?0:1;
+    RPE.risultati=dati.risultati.sort((a,b)=>exact(a)-exact(b)||a.nome.localeCompare(b.nome,'it',{numeric:true}));
+    RPE.visibili=0;
+    RPE.limite=dati.limite;
+    mostraPercorsiRpe();
+  }catch(e){
+    if(RPE.richiesta===richiesta)$('#rpeSt').textContent='Rete RPE non disponibile. '+(e.name==='AbortError'?'Richiesta scaduta.':e.message);
+  }finally{
+    clearTimeout(scadenza);
+    if(RPE.richiesta===richiesta)RPE.richiesta=null;
+  }
+}
+$('#rpeVai').onclick=cercaPercorsiRpe;
+$('#rpeAltro').onclick=mostraPercorsiRpe;
+$('#rpeQ').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();cercaPercorsiRpe()}};
+$('#rpeMappa').onclick=()=>gmApri($('#rpeZona').value,'rpe');
+$('#rpeLista').onclick=async e=>{
+  const btn=e.target.closest('[data-rpe]');
+  if(!btn||btn.disabled)return;
+  const row=RPE.risultati[+btn.closest('[data-i]').dataset.i];
+  if(!row)return;
+  const esistente=S.recs.find(r=>r.fonte==='RPE Regione Piemonte'&&r.file===filePercorsoRpe(row));
+  if(btn.dataset.rpe==='vedi'){openDet(esistente||recordRpe(row),!esistente);return}
+  if(esistente){toast('Percorso già in libreria');return}
+  btn.disabled=true;
+  try{
+    const rec=recordRpe(row);
+    await salva(rec);
+    renderLib();
+    btn.textContent='Importato';
+    toast('Importato: '+rec.nome);
   }catch(e){
     btn.disabled=false;
     toast('Importazione non riuscita: '+e.message);

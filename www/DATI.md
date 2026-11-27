@@ -13,3 +13,9 @@ Dati forniti dalla Struttura Forestazione e Sentieristica della Regione Autonoma
 - **Archivio locale**. Elaborazione dello shapefile `sentieri.shp` del [download ufficiale Rete Sentieristica](https://geoportale.regione.vda.it/download/rete-sentieristica/), file datati 17 novembre 2026. I 1.100 itinerari pubblicati usano una selezione dei campi originali, coordinate convertite in WGS84 e arrotondate a cinque decimali. I GPX creati da queste geometrie non includono quote puntuali.
 - **Rete regionale sulla mappa**. Collegamento al [servizio WMS del Catasto](https://catastosentieri.regione.vda.it/interoperabilita/) e alla sua cartografia online.
 - **Sentieri CAI sulla mappa**. Richiesta distinta dei sentieri OSM2CAI nell’area visibile. Le due fonti hanno coperture diverse.
+
+## Rete del Patrimonio Escursionistico del Piemonte
+
+Fonte: [Regione Piemonte, Rete del Patrimonio Escursionistico (RPE), percorsi](https://www.geoportale.piemonte.it/geonetwork/serv/api/records/r_piemon:77e9d108-c291-4fcf-ba5b-12c1b3251558), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.it).
+
+La ricerca online usa il servizio WFS ufficiale e filtra i percorsi per coordinate, codice o descrizione disponibile. I GPX esportati contengono la geometria WGS84 e l’attribuzione. Le quote puntuali non sono presenti nella geometria restituita. Il livello RPE online usa il WMS ufficiale. Il pulsante Sentieri CAI qui consulta OSM2CAI nell’area visibile.
