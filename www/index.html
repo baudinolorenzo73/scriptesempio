@@ -7,9 +7,11 @@
 <link rel="icon" type="image/png" href="icone/icona-192.png">
 <link rel="apple-touch-icon" href="icone/icona-192.png">
 <script src="versione.js"></script>
+<script src="geomagnetism.js"></script>
+<script src="zone.js"></script>
 
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Gestore GPX</title>
+<title>LolloGpx</title>
 <meta name="color-scheme" content="light dark">
 <style>
 :root{--bg:#f2f2f2;--fg:#212121;--card:#fff;--line:#d9d9d9;--tenue:#666;--prim:#e67300;--bar:#2e2e2e;--acc:#ffa000;--bad:#c62828;--map:#e4e4e4}
@@ -160,7 +162,7 @@ a{color:var(--prim)}
 </style>
 </head>
 <body>
-<header><h1>🥾 Gestore GPX <small>by Lollo ®2026 · v<span class="num-versione"></span></small></h1></header>
+<header><h1>🥾 LolloGpx <small>by Lollo ®2026 · v<span class="num-versione"></span></small></h1></header>
 <nav>
   <button data-tab="lib" class="on">📚 Libreria</button>
   <button data-tab="rete">🌐 Cerca in rete</button>
@@ -174,6 +176,7 @@ a{color:var(--prim)}
     <div class="filtri-libreria">
       <input id="fLuogo" type="search" list="luoghiNoti" aria-label="Filtra per luogo o valle" placeholder="Luogo o valle">
       <datalist id="luoghiNoti"></datalist>
+      <select id="fZona" aria-label="Zona geografica"><option value="">Tutte le zone</option></select>
       <select id="fAtt" aria-label="Attività"><option value="">Tutte le attività</option></select>
       <select id="fDiff" aria-label="Difficoltà"><option value="">Tutte le difficoltà</option><option>T</option><option>E</option><option>EE</option><option>EEA</option><option>EAI</option><option>F</option><option>PD</option><option>AD</option><option>D</option><option value="alt">EAI e alpinistiche</option><option value="no">Non indicata</option></select>
       <select id="fOrd" aria-label="Ordina tracce">
@@ -208,6 +211,22 @@ a{color:var(--prim)}
 </section>
 
 <section id="tab-rete" hidden>
+  <div class="card">
+    <b>Sentieri della Valle d’Aosta</b>
+    <div class="row" style="margin-top:8px">
+      <select id="vdaZona" aria-label="Valle del sentiero"></select>
+      <input id="vdaQ" type="search" aria-label="Nome o segnavia del sentiero" placeholder="Nome, località o segnavia, es. 24A">
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="vdaVai">Cerca nel Catasto regionale</button>
+      <button class="btn sec" id="vdaMappa">Mappa dei sentieri</button>
+    </div>
+    <p class="sub">Archivio regionale del 17/11/2026, disponibile offline dopo il primo caricamento. Sulla mappa puoi consultare la rete regionale online e cercare i sentieri CAI nell’area visibile.</p>
+    <p class="sub">Dati forniti dalla Struttura Forestazione e Sentieristica della Regione Autonoma Valle d’Aosta. <a href="https://catastosentieri.regione.vda.it/" target="_blank" rel="noopener">Catasto ufficiale</a> · <a href="https://creativecommons.org/licenses/by/4.0/deed.it" target="_blank" rel="noopener">CC BY 4.0</a></p>
+    <p class="sub" id="vdaSt" role="status"></p>
+    <div id="vdaLista"></div>
+    <button class="btn sec" id="vdaAltro" hidden>Altri risultati</button>
+  </div>
   <div class="card">
     <b>🤖 Descrivi cosa cerchi</b>
     <div class="sub">L'AI trasforma la richiesta in parole chiave per la ricerca (serve la chiave in Config).</div>
@@ -287,7 +306,7 @@ a{color:var(--prim)}
     <div class="mapw">
       <canvas id="mapc"></canvas>
       <select id="baseSel"></select><select id="overSel" style="top:52px"></select>
-      <button class="cmp" id="cmp" title="Tocca per riportare il nord in alto"><svg viewBox="0 0 46 46"><g id="cmpN"><polygon points="23,6 29,23 17,23" fill="#d32f2f"/><polygon points="23,40 29,23 17,23" fill="#888"/><circle cx="23" cy="23" r="2.5" fill="#fff" stroke="#555"/><text x="23" y="16" font-size="0" fill="#fff">N</text></g></svg></button>
+      <button class="cmp" id="cmp" title="Scegli nord geografico o magnetico"><svg viewBox="0 0 46 46"><g id="cmpN"><polygon points="23,6 29,23 17,23" fill="#d32f2f"/><polygon points="23,40 29,23 17,23" fill="#888"/><circle cx="23" cy="23" r="2.5" fill="#fff" stroke="#555"/><text x="23" y="16" font-size="0" fill="#fff">N</text></g></svg></button>
       <div class="mb"><button id="zd" title="Scarica mappe offline">⬇</button><button id="zi">＋</button><button id="zo">－</button><button id="zf">⤢</button></div>
       <div class="cross">＋</div>
     </div>
@@ -314,7 +333,7 @@ a{color:var(--prim)}
   <div class="mapw">
     <canvas id="gmc"></canvas>
     <select id="gmBase"></select><select id="gmOver"></select>
-    <button class="cmp" id="gmCmp" title="Tocca per riportare il nord in alto"><svg viewBox="0 0 46 46"><g id="gmCmpN"><polygon points="23,6 29,23 17,23" fill="#d32f2f"/><polygon points="23,40 29,23 17,23" fill="#888"/><circle cx="23" cy="23" r="2.5" fill="#fff" stroke="#555"/></g></svg></button>
+    <button class="cmp" id="gmCmp" title="Scegli nord geografico o magnetico"><svg viewBox="0 0 46 46"><g id="gmCmpN"><polygon points="23,6 29,23 17,23" fill="#d32f2f"/><polygon points="23,40 29,23 17,23" fill="#888"/><circle cx="23" cy="23" r="2.5" fill="#fff" stroke="#555"/></g></svg></button>
     <div class="mb"><button id="gmZi">＋</button><button id="gmZo">－</button><button id="gmZf" title="Mostra tutti">⤢</button></div>
     <button class="btn" id="gmCai" style="position:absolute;left:8px;top:140px;min-height:40px;padding:6px 10px">🥾 Sentieri CAI qui</button>
     <select id="gmCol"><option value="">Colore: per percorso</option><option value="diff">Colore: per difficoltà</option></select>
@@ -325,7 +344,7 @@ a{color:var(--prim)}
 <input id="scDirIn" type="file" webkitdirectory multiple hidden>
 <div id="scm" hidden><div class="bx">
   <b>🔎 Scansione intelligente</b>
-  <div class="sub" style="margin:6px 0">Cerca i GPX (anche dentro gli ZIP) in una cartella o in un intero disco, salta le cartelle di sistema, riconosce quelli già in libreria e i doppioni identici. Non cancella né sposta nulla.<br><b>Nell'app Android «Gestore GPX»</b> la scansione legge tutta la memoria (serve il permesso «Accesso a tutti i file»). <b>Nel browser</b> invece Android vieta di scegliere la radice della memoria, «Download» e «Android» («Impossibile usare questa cartella»). Scegli invece le cartelle una alla volta (Documents, OsmAnd, Dropbox, le tue cartelle…): l'elenco si accumula tra una scansione e l'altra.</div>
+  <div class="sub" style="margin:6px 0">Cerca i GPX (anche dentro gli ZIP) in una cartella o in un intero disco, salta le cartelle di sistema, riconosce quelli già in libreria e i doppioni identici. Non cancella né sposta nulla.<br><b>Nell'app Android «LolloGpx»</b> la scansione legge tutta la memoria (serve il permesso «Accesso a tutti i file»). <b>Nel browser</b> invece Android vieta di scegliere la radice della memoria, «Download» e «Android» («Impossibile usare questa cartella»). Scegli invece le cartelle una alla volta (Documents, OsmAnd, Dropbox, le tue cartelle…): l'elenco si accumula tra una scansione e l'altra.</div>
   <div class="row"><button class="btn" id="scPick">📁 Scegli cartella (puoi ripetere)</button><button class="btn sec" id="scClr">Svuota elenco</button><button class="btn sec" id="scStop" hidden>Ferma</button></div>
   <div id="scRoots" class="row" style="flex-direction:column"></div>
   <div class="pg"><i id="scBar"></i></div><div class="sub" id="scSt"></div>
@@ -483,7 +502,7 @@ function mk(o){
 const xe=s=>String(s??'').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
 function toGPX(rec){
   const P=(tag,p)=>`<${tag} lat="${p[0].toFixed(7)}" lon="${p[1].toFixed(7)}">${p[2]!=null?`<ele>${(+p[2]).toFixed(1)}</ele>`:''}${p[3]!=null?`<time>${new Date(p[3]).toISOString()}</time>`:''}</${tag}>`;
-  let s='<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Gestore GPX by Lollo ®2026" xmlns="http://www.topografix.com/GPX/1/1">\n';
+  let s='<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="LolloGpx by Lollo ®2026" xmlns="http://www.topografix.com/GPX/1/1">\n';
   s+=`<metadata><name>${xe(rec.nome)}</name>${rec.descr?`<desc>${xe(rec.descr)}</desc>`:''}${rec.tags.length?`<keywords>${xe(rec.tags.join(', '))}</keywords>`:''}</metadata>\n`;
   for(const w of rec.wpts)s+=`<wpt lat="${w.lat.toFixed(7)}" lon="${w.lon.toFixed(7)}">${w.ele!=null?`<ele>${(+w.ele).toFixed(1)}</ele>`:''}${w.time!=null?`<time>${new Date(w.time).toISOString()}</time>`:''}<name>${xe(w.name)}</name>${w.desc?`<desc>${xe(w.desc)}</desc>`:''}${w.sym?`<sym>${xe(w.sym)}</sym>`:''}</wpt>\n`;
   for(const t of rec.tracks){
@@ -539,6 +558,7 @@ const OVER={
  hike:{lab:'Sentieri escursionistici (Waymarked)',u:'https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png',mz:18,att:'© waymarkedtrails.org'},
  cycle:{lab:'Percorsi ciclabili (Waymarked)',u:'https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png',mz:18,att:'© waymarkedtrails.org'},
  ombr:Object.assign(wms('Ombreggiatura rilievo (Piemonte)',PM,'regp_ombreggiature','© Regione Piemonte'),{a:.55}),
+ vdasent:wms('Rete sentieristica Valle d’Aosta',VD+'Viabilita','Viabilita_Globale__Tratte_sentieristica','© RAVA · Forestazione e Sentieristica'),
  rpe:wms('Sentieri catasto RPE Piemonte (da zoom 12)','https://geoservices.csi.it/ms/wms/rpe/rp-01/rpewms/wms_percorsi','Percorsi','© Regione Piemonte RPE CC BY 4.0'),
  rpeit:wms('Itinerari RPE Piemonte (da zoom 12)','https://geoservices.csi.it/ms/wms/rpe/rp-01/rpewms/wms_itinerari','Itinerari','© Regione Piemonte RPE CC BY 4.0')};
 const TC='gpx-tiles-v1';
@@ -688,6 +708,8 @@ async function luogoAuto(r){try{if(!navigator.onLine||r.luogo)return;const l=awa
 const accoda=r=>{_q=_q.then(()=>luogoAuto(r))};
 
 /* ===== libreria ===== */
+opzioniZone($('#fZona'),true);
+opzioniZone($('#vdaZona'),false);
 const ordiniLibreria=$$('#fOrd option').map(o=>o.value);
 let raccolte=leggiRaccolte(), raccoltaAttiva='';
 
@@ -701,12 +723,12 @@ function normalizzaFiltri(f){
   const campo=k=>typeof f?.[k]==='string'?f[k].trim():'';
   const diff=campo('diff'), ordine=campo('ordine');
   return {
-    q:campo('q'), luogo:campo('luogo'), att:campo('att'),
+    q:campo('q'), luogo:campo('luogo'), zona:ZONE.has(campo('zona'))?campo('zona'):'',att:campo('att'),
     diff:[...DORD,'alt','no'].includes(diff)?diff:'',
     tag:campo('tag'), ordine:ordiniLibreria.includes(ordine)?ordine:'nome'
   };
 }
-function haFiltri(f){return !!(f.q||f.luogo||f.att||f.diff||f.tag)}
+function haFiltri(f){return !!(f.q||f.luogo||f.zona||f.att||f.diff||f.tag)}
 function normalizzaRaccolta(r){
   if(typeof r?.nome!=='string'||!r.nome.trim()||typeof r.id!=='string'||!r.id)return null;
   const filtri=normalizzaFiltri(r.filtri);
@@ -725,12 +747,13 @@ function scriviRaccolte(elenco){
   return true;
 }
 function filtriLibreria(){
-  return normalizzaFiltri({q:$('#q').value,luogo:$('#fLuogo').value,att:$('#fAtt').value,
+  return normalizzaFiltri({q:$('#q').value,luogo:$('#fLuogo').value,zona:$('#fZona').value,att:$('#fAtt').value,
     diff:$('#fDiff').value,tag:S.tag,ordine:$('#fOrd').value});
 }
 function impostaFiltri(f){
   $('#q').value=f.q;
   $('#fLuogo').value=f.luogo;
+  $('#fZona').value=f.zona;
   const att=$('#fAtt');
   if(f.att&&![...att.options].some(o=>o.value===f.att))att.add(new Option(f.att,f.att));
   att.value=f.att;
@@ -795,6 +818,7 @@ function filtrate(f=filtriLibreria()){
   const k={rec:(a,b)=>b.creato-a.creato,nome:N,luogo:(a,b)=>((a.luogo?0:1)-(b.luogo?0:1))||(a.luogo||'').localeCompare(b.luogo||'','it')||N(a,b),
     diff:(a,b)=>{const x=DORD.indexOf(dCod(a)),y=DORD.indexOf(dCod(b));return((x<0?99:x)-(y<0?99:y))||N(a,b)},dist:(a,b)=>b.stat.dist-a.stat.dist,dsl:(a,b)=>b.stat.up-a.stat.up,
     data:(a,b)=>ND(a,b)||((b.stat.t0||0)-(a.stat.t0||0))||N(a,b),datau:(a,b)=>ND(a,b)||((a.stat.t0||0)-(b.stat.t0||0))||N(a,b)}[o]||N;
+  if(f.zona)L=L.filter(r=>recordInZona(r,f.zona));
   return L.sort(k);
 }
 function thumb(cv,rec){
@@ -830,7 +854,7 @@ function renderLib(){
   const T=S.recs.reduce((a,r)=>({d:a.d+r.stat.dist,u:a.u+r.stat.up,w:a.w+r.stat.wp}),{d:0,u:0,w:0});
   renderSelbar();$('#cStat').textContent=`${S.recs.length} tracce · ${fKm(T.d)} · dislivello + ${fM(T.u)} · ${T.w} punti`;
 }
-async function salva(rec){rec.stat=calcStats(rec);HC.delete(rec);DUPSIG='';if(rec.tmp)return;await DB.put(rec);if(!S.recs.includes(rec))S.recs.push(rec)}
+async function salva(rec){rec.stat=calcStats(rec);HC.delete(rec);ZONE_MEMORIA.delete(rec);DUPSIG='';if(rec.tmp)return;await DB.put(rec);if(!S.recs.includes(rec))S.recs.push(rec)}
 async function importaTesto(txt,fname,fonte){
   const r=parseGPX(txt,fname);if(fonte)r.fonte=fonte;
   await salva(r);accoda(r);return r;
@@ -843,7 +867,7 @@ function prep(){const t=curTrack();cur.cum=cumul(t.pts);cur.sm=smooth(t.pts);if(
 function openDet(rec,tmp){
   cur={rec,ti:0,cur:null,undo:[]};S.aiOut=null;if(tmp)rec.tmp=true;
   const was=!$('#det').hidden;$('#det').hidden=false;if(!WIDE.matches)document.body.style.overflow='hidden';was?history.replaceState({det:1},''):history.pushState({det:1},'');
-  if(!map){map=new Mappa($('#mapc'));map.onRot=r=>{$('#cmpN').style.transform=`rotate(${r}rad)`;$('#cmpN').style.transformOrigin='23px 23px'};map.over=S.over;$('#overSel').value=S.over;map.onTap=mapTap;map.layers.push(drawLayers)}
+  if(!map){map=new Mappa($('#mapc'));map.onRot=()=>disegnaNord(map,'#cmpN');map.over=S.over;$('#overSel').value=S.over;map.onTap=mapTap;map.layers.push(drawLayers)}
   map.base=S.base;$('#baseSel').value=S.base;
   prep();$('#dTit').textContent=rec.nome;
   requestAnimationFrame(()=>{map.size();map.fit(bbox(rec));drawProf()});
@@ -946,8 +970,8 @@ function renderBody(){
   h+=det('mod','✂ Modifica',`<div class="sub" style="margin-bottom:8px">Tocca prima un punto sulla mappa o sul profilo, poi usa gli strumenti. ${cur.undo.length?'':''}</div><div class="tools">
     <button class="btn sec" data-act="cutb">✂ Taglia prima del punto</button><button class="btn sec" data-act="cuta">✂ Taglia dopo il punto</button>
     <button class="btn sec" data-act="split">⤫ Dividi qui in 2 tracce</button><button class="btn sec" data-act="rev">⇄ Inverti direzione</button>
-    <button class="btn sec" data-act="simp">〰 Semplifica punti</button><button class="btn sec" data-act="smooth">⛰ Leviga quote</button>
-    <button class="btn sec" data-act="elev">🌐 Aggiungi quote (online)</button><button class="btn sec" data-act="notime">🕒 Rimuovi orari</button>
+    <button class="btn sec" data-act="checktrack">Controlla registrazione e quote</button><button class="btn sec" data-act="normalize">Normalizza traccia</button><button class="btn sec" data-act="altfix">Correggi altitudine</button><button class="btn sec" data-act="compress">Comprimi traccia</button><button class="btn sec" data-act="smooth">⛰ Leviga quote</button>
+    <button class="btn sec" data-act="elev">🌐 Controlla / aggiorna quote online</button><button class="btn sec" data-act="notime">🕒 Rimuovi orari</button>
     <button class="btn sec" data-act="merge">🔗 Unisci con altra traccia</button><button class="btn sec" data-act="rtn">✏ Rinomina traccia</button>
     <button class="btn sec" data-act="deltr">🗑 Elimina traccia</button><button class="btn sec" data-act="undo" ${cur.undo.length?'':'disabled'}>↩ Annulla (${cur.undo.length})</button></div>`);
   h+=det('km','📏 Ogni km',kmTable());
@@ -960,14 +984,201 @@ function kmTable(){
     const ta=pts[a][3],tb=pts[i][3];rows.push(`<tr><td>${k}${i===c.length-1&&c[i]<k*1000?' (fine)':''}</td><td>${(dist/1000).toFixed(2)}</td><td>+${Math.round(u)}</td><td>−${Math.round(d)}</td><td>${ta!=null&&tb!=null?fT(tb-ta):''}</td></tr>`);a=i;k++}}
   return `<table><tr><th>km</th><th>dist.</th><th>↗ m</th><th>↘ m</th><th>tempo</th></tr>${rows.join('')}</table><div style="height:10px"></div>`;
 }
-async function persisti(){cur.rec.stat=calcStats(cur.rec);HC.delete(cur.rec);DUPSIG='';if(!cur.rec.tmp)await DB.put(cur.rec);$('#dTit').textContent=cur.rec.nome}
+async function persisti(){cur.rec.stat=calcStats(cur.rec);HC.delete(cur.rec);ZONE_MEMORIA.delete(cur.rec);DUPSIG='';if(!cur.rec.tmp)await DB.put(cur.rec);$('#dTit').textContent=cur.rec.nome}
 function snap(){cur.undo.push(JSON.stringify({t:cur.rec.tracks,w:cur.rec.wpts,ti:cur.ti}));if(cur.undo.length>8)cur.undo.shift()}
-async function commit(fit){prep();await persisti();renderTrSel();renderBody();map.draw();drawProf();if(fit)map.fit(bbox(cur.rec))}
+async function commit(fit){GM.simp.delete(cur.rec);prep();await persisti();renderTrSel();renderBody();map.draw();drawProf();if(fit)map.fit(bbox(cur.rec))}
 function needCursor(){if(cur.cur==null){toast('Prima tocca un punto sulla mappa o sul profilo');return false}return true}
+
+/* Controllo della traccia selezionata. by Lollo ®2026 */
+function controllaPunti(pts,velocita=15,salto=100){
+  const errori=[];
+  for(let i=0;i<pts.length;i++){
+    const p=pts[i],a=pts[i-1];
+    if(!Number.isFinite(p[0])||!Number.isFinite(p[1])||Math.abs(p[0])>90||Math.abs(p[1])>180)
+      errori.push({i,tipo:'Coordinate non valide'});
+    if(p[2]==null)errori.push({i,tipo:'Quota mancante'});
+    if(p[2]!=null&&(!Number.isFinite(p[2])||p[2]<-500||p[2]>9000))
+      errori.push({i,tipo:'Quota fuori intervallo'});
+    if(!a)continue;
+    if(p[0]===a[0]&&p[1]===a[1]&&p[2]===a[2]&&p[3]===a[3])
+      errori.push({i,tipo:'Punto identico consecutivo'});
+    if(p[2]!=null&&a[2]!=null&&Math.abs(p[2]-a[2])>salto)
+      errori.push({i,tipo:'Salto di quota'});
+    if(p[3]!=null&&a[3]!=null){
+      const dt=(p[3]-a[3])/1000;
+      if(dt<=0)errori.push({i,tipo:'Orario non crescente'});
+      else if(hav(a,p)/dt*3.6>velocita)errori.push({i,tipo:'Velocità oltre soglia'});
+    }
+  }
+  return errori;
+}
+function normalizzaPunti(pts,rimuoviPicchi,velocita){
+  const puliti=pts.filter((p,i)=>!i||p.some((v,k)=>v!==pts[i-1][k]));
+  if(!rimuoviPicchi)return puliti;
+  return puliti.filter((p,i)=>{
+    if(!i||i===puliti.length-1)return true;
+    const a=puliti[i-1],b=puliti[i+1];
+    const dt1=(p[3]-a[3])/1000,dt2=(b[3]-p[3])/1000,dt=(b[3]-a[3])/1000;
+    if([a,p,b].some(q=>q[3]==null)||dt1<=0||dt2<=0)return true;
+    return !(hav(a,p)/dt1*3.6>velocita&&hav(p,b)/dt2*3.6>velocita&&hav(a,b)/dt*3.6<=velocita);
+  });
+}
+async function verificaTraccia(){
+  const owner=cur,t=curTrack(),originali=t.pts;
+  const v=await chiedi('Controlla registrazione',[
+    {label:'Velocità da segnalare (km/h, trekking 15)',v:'15',tipo:'number',step:'1'},
+    {label:'Salto tra quote consecutive (m)',v:'100',tipo:'number',step:'1'}],'Controlla');
+  if(!v||cur!==owner)return;
+  const velocita=Number(v[0]),salto=Number(v[1]);
+  if(!(velocita>0&&salto>0)){toast('Inserisci soglie positive');return}
+  const errori=controllaPunti(originali,velocita,salto);
+  await modal((b,close)=>{
+    const gruppi={};
+    errori.forEach(e=>gruppi[e.tipo]=(gruppi[e.tipo]||0)+1);
+    b.innerHTML='<h3>Controllo registrazione</h3><p>'+originali.length+' punti · '+errori.length+' segnalazioni</p>'+
+      Object.entries(gruppi).map(([k,n])=>'<div>'+esc(k)+' · '+n+'</div>').join('')+
+      '<p class="sub">Le soglie indicano anomalie da verificare. Le velocità richiedono orari validi.</p>'+
+      errori.slice(0,100).map(e=>'<button class="pick" data-p="'+e.i+'">Punto '+(e.i+1)+' · '+esc(e.tipo)+'</button>').join('')+
+      (errori.length>100?'<p>Mostrate le prime 100 segnalazioni.</p>':'')+
+      '<button class="btn" data-close>Chiudi</button>';
+    b.onclick=e=>{
+      const btn=e.target.closest('[data-p]');
+      if(btn){if(cur===owner&&t===curTrack())setCursor(+btn.dataset.p,true);close(null)}
+      if(e.target.closest('[data-close]'))close(null);
+    };
+  });
+}
+async function normalizzaTraccia(){
+  const owner=cur,t=curTrack(),prima=t.pts;
+  const scelta=await scegli('Normalizza traccia',[
+    {k:'dup',label:'Rimuovi punti identici consecutivi'},
+    {k:'picchi',label:'Rimuovi duplicati e picchi GPS isolati',sub:'Richiede orari crescenti e una soglia di velocità'}
+  ]);
+  if(!scelta||cur!==owner)return;
+  let velocita=15;
+  if(scelta==='picchi'){
+    const v=await chiedi('Picchi GPS',[{label:'Velocità massima plausibile (km/h)',v:'15',tipo:'number',step:'1'}],'Anteprima');
+    if(!v||cur!==owner)return;
+    velocita=Number(v[0]);if(!(velocita>0)){toast('Soglia non valida');return}
+  }
+  const dopo=normalizzaPunti(prima,scelta==='picchi',velocita);
+  if(dopo.length===prima.length){toast('Nessun punto da rimuovere');return}
+  if(dopo.length<2){toast('Rimarrebbero meno di due punti');return}
+  if(!await conferma('Punti '+prima.length+' → '+dopo.length+'. Distanza '+fKm(tStat(prima).d)+' → '+fKm(tStat(dopo).d)+'. Applicare?','Applica'))return;
+  if(cur!==owner||t.pts!==prima)return;
+  snap();t.pts=dopo;cur.cur=null;await commit();toast('Traccia normalizzata · disponibile Annulla');
+}
+async function comprimiTraccia(){
+  const owner=cur,t=curTrack(),prima=t.pts;
+  const v=await chiedi('Comprimi traccia',[{label:'Tolleranza geometrica in metri (es. 5)',v:'5',tipo:'number',step:'0.5'}],'Anteprima');
+  if(!v||cur!==owner)return;
+  const metri=Number(v[0]);if(!(metri>0)){toast('Tolleranza non valida');return}
+  const dopo=dp(prima,metri);
+  const bytes=p=>new TextEncoder().encode(toGPX({...cur.rec,tracks:[{...t,pts:p}],wpts:[]})).length;
+  if(!await conferma('Punti '+prima.length+' → '+dopo.length+' · GPX della traccia '+Math.round(bytes(prima)/1024)+' → '+Math.round(bytes(dopo)/1024)+' KB. I punti rimossi perdono quote e orari associati. Applicare?','Comprimi'))return;
+  if(cur!==owner||t.pts!==prima)return;
+  snap();t.pts=dopo;cur.cur=null;await commit();toast('Traccia compressa · disponibile Annulla');
+}
+let riferimentoNord='geografico',declinazioneNord=0,dataNord='';
+const cacheDeclinazione=new Map();
+function partenzaNord(m){
+  const r=m===map?cur?.rec:(GM.sel||GM.recs[0]);
+  const tracce=r?.tracks||[];
+  const t=tracce.find(t=>!t.rte&&t.pts.length)||tracce.find(t=>t.pts.length);
+  if(t)return {p:t.pts[0],nome:r.nome};
+  const w=r?.wpts?.[0];
+  if(w)return {p:[w.lat,w.lon,w.ele,w.time],nome:r.nome};
+  throw new Error('Apri o seleziona una traccia GPX');
+}
+function declinazioneAutomatica(m,giorno=dataNord||new Date().toISOString().slice(0,10)){
+  const {p,nome}=partenzaNord(m);
+  const data=new Date(giorno+'T12:00:00Z');
+  if(!Number.isFinite(data.getTime()))throw new Error('Data non valida');
+  if(!Number.isFinite(p[0])||!Number.isFinite(p[1])||Math.abs(p[0])>90||Math.abs(p[1])>180)throw new Error('Partenza non valida');
+  // Le quote GPX sono generalmente ortometriche: per il nord si usa il riferimento al livello del mare.
+  const key=JSON.stringify([p[0],p[1],giorno]);
+  if(!cacheDeclinazione.has(key)){
+    const modello=geomagnetism.model(data);
+    const campo=modello.point([p[0],p[1],0]);
+    if(!Number.isFinite(campo.decl)||campo.h<2000)throw new Error('Nord magnetico non affidabile in questa zona');
+    if(cacheDeclinazione.size>100)cacheDeclinazione.clear();
+    cacheDeclinazione.set(key,{d:campo.decl,modello:modello.name||'WMM'});
+  }
+  return {...cacheDeclinazione.get(key),p,nome,giorno};
+}
+function nordMappa(m){
+  if(riferimentoNord==='magnetico automatico')return declinazioneAutomatica(m).d;
+  return riferimentoNord==='magnetico manuale'?declinazioneNord:0;
+}
+async function correggiQuote(){
+  const owner=cur,t=curTrack(),prima=t.pts;
+  const v=await chiedi('Correggi altitudine',[
+    {label:'Correzione costante in metri (+ o −)',v:'0',tipo:'number',step:'0.1'}
+  ],'Anteprima');
+  if(!v||cur!==owner)return;
+  const offset=Number(v[0]);
+  if(!Number.isFinite(offset)||Math.abs(offset)>10000){toast('Correzione non valida');return}
+  const n=prima.filter(p=>Number.isFinite(p[2])).length;
+  if(!n){toast('Nessuna quota da correggere. Usa Aggiungi quote online');return}
+  if(!await conferma('Spostare di '+offset+' m le '+n+' quote disponibili?','Applica'))return;
+  if(cur!==owner||t.pts!==prima)return;
+  snap();t.pts=prima.map(p=>[p[0],p[1],Number.isFinite(p[2])?p[2]+offset:p[2],p[3]]);
+  await commit();toast('Quote corrette · disponibile Annulla');
+}
+function disegnaNord(m,selector){
+  let d=0,etichetta='Nord '+riferimentoNord;
+  try{d=nordMappa(m);if(riferimentoNord!=='geografico')etichetta+=' · '+d.toFixed(2)+'°'}
+  catch(e){etichetta='Nord geografico · calcolo magnetico non disponibile: '+e.message}
+  const angolo=m.rot+d*rad;
+  const e=$(selector);
+  e.style.transform='rotate('+angolo+'rad)';
+  e.style.transformOrigin='23px 23px';
+  const btn=e.parentElement.parentElement;
+  btn.title=etichetta+' · tocca per orientare';
+  btn.setAttribute('aria-label',btn.title);
+}
+async function scegliNord(m){
+  let info=null,errore='';
+  try{info=declinazioneAutomatica(m)}catch(e){errore=e.message}
+  const azione=await scegli('Nord della mappa',[
+    {k:'geografico',label:'Nord geografico'},
+    {k:'auto',label:'Nord magnetico automatico',sub:info?
+      info.d.toFixed(2)+'° · '+info.modello+' · '+info.nome+' · '+info.giorno:
+      'Calcolo non disponibile per la data attuale: '+errore},
+    {k:'data',label:'Cambia data del calcolo',sub:'La data iniziale è quella odierna'},
+    {k:'manuale',label:'Declinazione manuale'}
+  ]);
+  if(!azione)return;
+  if(azione==='data'){
+    const v=await chiedi('Data per la declinazione',[{label:'Data di utilizzo',tipo:'date',v:dataNord||new Date().toISOString().slice(0,10)}],'Calcola');
+    if(!v)return;
+    try{info=declinazioneAutomatica(m,v[0]);dataNord=v[0]}
+    catch(e){toast('Calcolo non disponibile: '+e.message,6000);return}
+  }else if(azione==='auto'&&!info){toast('Calcolo non disponibile: '+errore,6000);return}
+  if(azione==='auto'||azione==='data'){
+    riferimentoNord='magnetico automatico';
+    toast(info.d.toFixed(2)+'° · '+info.modello+' · partenza di '+info.nome+' · '+info.giorno,6500);
+  }else if(azione==='manuale'){
+  const v=await chiedi('Riferimento del nord',[
+    {label:'Declinazione locale in gradi (Est positivo, Ovest negativo)',v:String(declinazioneNord),tipo:'number',step:'0.1'}
+  ],'Orienta');
+  if(!v)return;
+  const d=Number(v[0]);
+  if(!Number.isFinite(d)||Math.abs(d)>180){toast('Declinazione non valida');return}
+  riferimentoNord='magnetico manuale';declinazioneNord=d;
+  }else riferimentoNord='geografico';
+  m.rot=-nordMappa(m)*rad;m.draw();
+  if(map&&map!==m)map.draw();
+  if(gm&&gm!==m)gm.draw();
+}
 
 async function azione(a,el){
   const r=cur.rec,t=curTrack(),pts=t.pts;
   switch(a){
+    case 'checktrack':await verificaTraccia();break;
+    case 'normalize':await normalizzaTraccia();break;
+    case 'altfix':await correggiQuote();break;
+    case 'compress':await comprimiTraccia();break;
     case 'dosm':{if(!navigator.onLine){toast('Serve la rete');break}toast('Interrogo OpenStreetMap…',30000);
       const x=await diffOsm(r);if(!x){toast('OSM non ha la difficoltà per questo percorso: scegli tu T/E/EE/EEA',6000);break}
       r.diff=DIF.find(d=>d.startsWith(x.cod+' '))||x.cod;await persisti();renderBody();toast(`OSM (${x.src}): ${x.dist} → impostata ${x.cod}`,8000);break}
@@ -1016,17 +1227,40 @@ async function nuovoWp(lat,lon,ele){
   snap();cur.rec.wpts.push({lat,lon,ele,time:null,name:v[0],desc:v[1],sym:''});await commit();toast('Punto aggiunto');
 }
 async function aggiungiQuote(){
-  const t=curTrack(),idx=[];t.pts.forEach((p,i)=>{if(p[2]==null)idx.push(i)});
-  if(!idx.length){toast('Tutti i punti hanno già la quota');return}
+  const owner=cur,t=curTrack(),prima=t.pts;
+  const modo=await scegli('Quote del terreno (online)',[
+    {k:'missing',label:'Completa quote mancanti'},
+    {k:'check',label:'Confronta quote registrate e terreno',sub:'Campiona fino a 100 punti, senza modificare'},
+    {k:'replace',label:'Sostituisci quote con quelle del terreno',sub:'Le quote del terreno possono differire da ponti e passaggi sopraelevati'}
+  ]);
+  if(!modo||cur!==owner)return;
+  const idx=[];
+  if(modo==='check'){
+    const n=Math.min(100,prima.length);
+    for(let k=0;k<n;k++)idx.push(Math.round(k*(prima.length-1)/Math.max(1,n-1)));
+  }else prima.forEach((p,i)=>{if(modo==='replace'||p[2]==null)idx.push(i)});
+  if(!idx.length){toast('Nessuna quota da aggiornare');return}
   if(idx.length>4000&&!await conferma(`Ci sono ${idx.length} punti senza quota: servono ${Math.ceil(idx.length/100)} richieste. Meglio prima «Semplifica punti». Continuare lo stesso?`,'Continua'))return;
   if(!navigator.onLine){toast('Serve la rete');return}
-  snap();const np=t.pts.map(p=>p.slice());
+  if(modo==='replace'&&!await conferma('Sostituire '+idx.length+' quote con il modello del terreno Open-Meteo?','Continua'))return;
+  const np=prima.map(p=>p.slice());
   try{for(let k=0;k<idx.length;k+=100){const ch=idx.slice(k,k+100);
     toast(`Quote… ${Math.min(k+100,idx.length)}/${idx.length}`,60000);
     const u='https://api.open-meteo.com/v1/elevation?latitude='+ch.map(i=>t.pts[i][0].toFixed(5)).join(',')+'&longitude='+ch.map(i=>t.pts[i][1].toFixed(5)).join(',');
-    const j=await (await fetch(u)).json();if(!j.elevation)throw new Error('risposta non valida');ch.forEach((i,n)=>np[i][2]=j.elevation[n])}
-    t.pts=np;await commit();toast('Quote aggiunte (fonte Open-Meteo)')}
-  catch(e){cur.undo.pop();toast('Errore quote: '+e.message,6000)}
+    const response=await fetch(u,{signal:AbortSignal.timeout(30000)});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    const j=await response.json();
+    if(!Array.isArray(j.elevation)||j.elevation.length!==ch.length||j.elevation.some(e=>!Number.isFinite(e)))throw new Error('quote del terreno non valide');
+    ch.forEach((i,n)=>np[i][2]=j.elevation[n])}
+    if(cur!==owner||t.pts!==prima){toast('Traccia cambiata durante la richiesta: ripeti il controllo');return}
+    if(modo==='check'){
+      const delta=idx.filter(i=>Number.isFinite(prima[i][2])).map(i=>Math.abs(prima[i][2]-np[i][2]));
+      const media=delta.length?delta.reduce((a,b)=>a+b,0)/delta.length:0;
+      await conferma(delta.length?'Confrontati '+delta.length+' punti. Scarto assoluto medio '+media.toFixed(1)+' m, massimo '+Math.max(...delta).toFixed(1)+' m. Fonte Open-Meteo, modello del terreno a risoluzione 90 m.':'I punti campionati non hanno quote registrate da confrontare.','Chiudi');
+      return;
+    }
+    snap();t.pts=np;await commit();toast('Quote aggiornate (fonte Open-Meteo)')}
+  catch(e){toast('Errore quote: '+e.message,6000)}
 }
 
 /* ===== ricerca in rete (OpenStreetMap) ===== */
@@ -1105,6 +1339,7 @@ async function ripristina(f){
 function tab(n){$$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===n));['lib','rete','cfg'].forEach(x=>$('#tab-'+x).hidden=x!==n);if(n==='lib')renderLib()}
 $$('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $('#q').oninput=cambiaFiltri;$('#fLuogo').oninput=cambiaFiltri;
+$('#fZona').onchange=cambiaFiltri;
 $('#fAtt').onchange=cambiaFiltri;$('#fDiff').onchange=cambiaFiltri;
 $('#bDiffAll').onclick=rilevaTutte;$('#fOrd').onchange=()=>{LSs('lg_ord',$('#fOrd').value);cambiaFiltri()};
 $('#tags').onclick=e=>{if(e.target.dataset.dup){S.dupOnly=!S.dupOnly;cambiaFiltri();return}const t=e.target.dataset.tag;if(t!==undefined){S.tag=S.tag===t?'':t;cambiaFiltri()}};
@@ -1135,7 +1370,7 @@ $('#nUrlGo').onclick=async()=>{const u=$('#nUrl').value.trim();if(!u)return;
   $('#baseSel').innerHTML=h;$('#cBase').innerHTML=h;
   $('#overSel').innerHTML='<option value="">+ Livello sopra: nessuno</option>'+Object.keys(OVER).map(k=>`<option value="${k}">+ ${OVER[k].lab}</option>`).join('')}
 $('#cBase').value=S.base;$('#cBase').onchange=e=>{S.base=e.target.value;LSs('lg_base',S.base)};
-$('#bBk').onclick=()=>{scarica('gestore-gpx-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify({app:'gestore-gpx',v:2,tracce:S.recs,raccolte}),'application/json');toast('Backup creato')};
+$('#bBk').onclick=()=>{scarica('lollogpx-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify({app:'gestore-gpx',v:2,tracce:S.recs,raccolte}),'application/json');toast('Backup creato')};
 $('#bRs').onclick=()=>$('#fileBk').click();
 $('#fileBk').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{await ripristina(f);renderLib()}catch(x){toast('Errore: '+x.message,5000)}};
 $('#bDup').onclick=controllaDoppioni;
@@ -1171,7 +1406,7 @@ $('#dMenu').onclick=async()=>{if(!cur)return;const r=cur.rec;const v=[];
   if(k==='del'){if(!await conferma('Eliminare «'+r.nome+'» dalla libreria?','Elimina'))return;await DB.del(r.id);S.recs=S.recs.filter(x=>x!==r);closeDet(false);toast('Eliminata')}};
 $('#overSel').onchange=e=>{S.over=e.target.value;LSs('lg_over',S.over);if(map){map.over=S.over;map.draw()}};
 $('#baseSel').onchange=e=>{S.base=e.target.value;LSs('lg_base',S.base);map.base=e.target.value;map.ok=0;map.err=0;map.draw()};
-$('#cmp').onclick=()=>map.nord();
+$('#cmp').onclick=()=>scegliNord(map);
 $('#zd').onclick=()=>offApri();
 $('#zi').onclick=()=>map.zoomBy(1);$('#zo').onclick=()=>map.zoomBy(-1);$('#zf').onclick=()=>{map.fit(bbox(cur.rec))};
 $('#trSel').onchange=e=>{cur.ti=+e.target.value;cur.cur=null;prep();renderBody();map.draw();drawProf();$('#cinfo').textContent='Tocca la mappa o il profilo per scegliere un punto.'};
@@ -1317,7 +1552,7 @@ function testoScheda(r){
   if(r.descr)x+='\n'+r.descr.slice(0,400)+'\n';
   if(r.commenti.length)x+='\n💬 '+r.commenti.slice(-2).map(c=>c.txt).join(' / ').slice(0,300)+'\n';
   if(p)x+=`\nPartenza: https://www.openstreetmap.org/?mlat=${p[0].toFixed(5)}&mlon=${p[1].toFixed(5)}#map=15/${p[0].toFixed(5)}/${p[1].toFixed(5)}\n`;
-  return x+'\nGestore GPX by Lollo ®2026'}
+  return x+'\nLolloGpx by Lollo ®2026'}
 async function fileShare(r,conFoto){
   const nome=slug(r.nome),mkf=tipo=>new File([toGPX(r)],nome+'.gpx',{type:tipo});
   const files=[mkf('application/gpx+xml')];
@@ -1366,7 +1601,7 @@ async function esportaRecs(list,modo){
     if(modo==='gpxzip'){const used=new Set();files=list.map(r=>{const b=slug(r.nome);let n=b,i=2;while(used.has(n))n=b+'-'+i++;used.add(n);return{path:n+'.gpx',data:toGPX(r)}})}
     else files=await costruisciFile(list);
     if(root){await scriviCartella(root,files);toast('Salvato nella cartella scelta')}
-    else{scaricaBlob(`gestore-gpx-${new Date().toISOString().slice(0,10)}${list.length===1?'-'+slug(list[0].nome):''}.zip`,await creaZip(files));toast('ZIP creato')}
+    else{scaricaBlob(`lollogpx-${new Date().toISOString().slice(0,10)}${list.length===1?'-'+slug(list[0].nome):''}.zip`,await creaZip(files));toast('ZIP creato')}
   }catch(e){if(e.name!=='AbortError')toast('Errore: '+e.message,6000)}}
 
 /* ===== importazione: file, cartella, ZIP, trascinamento ===== */
@@ -1497,7 +1732,7 @@ window.indietroAndroid=()=>{for(const id of['scm','dbm','offm']){const e=documen
   if(!document.getElementById('gm').hidden){gmChiudi();return true}
   const d=document.getElementById('det');if(d&&!d.hidden){document.getElementById('dBack').click();return true}return false};
 /* ===== mappa di tutti i percorsi ===== */
-let gm=null;const GM={recs:[],sel:null,simp:new WeakMap(),cai:[],caiSel:null};
+let gm=null;const GM={recs:[],sel:null,simp:new WeakMap(),cai:[],caiSel:null,zona:'',esplora:false};
 const GM_COL=['#e67300','#1e88e5','#8e24aa','#d81b60','#00897b','#6d4c41','#c0ca33','#e53935','#3949ab','#00acc1'];
 const gmCol=r=>{if(GM.mode==='diff')return DCOL[dCod(r)]||'#9e9e9e';let h=0;for(const c of r.id)h=(h*31+c.charCodeAt(0))>>>0;return GM_COL[h%GM_COL.length]};
 function gmLeg(){const e=$('#gmLeg');if(GM.mode!=='diff'){e.hidden=true;return}const n={};GM.recs.forEach(r=>{const c=dCod(r)||'?';n[c]=(n[c]||0)+1});
@@ -1569,29 +1804,130 @@ function gmCard(){const e=$('#gmCard'),r=GM.sel;if(!r){e.hidden=true;return}
   const st=r.stat||{};e.hidden=false;
   e.innerHTML=`<div><b>${esc(r.nome)}</b><small>${esc(r.luogo||'')}</small><small>${st.dist?(st.dist/1000).toFixed(1)+' km':''}${st.up?' · ↑ '+Math.round(st.up)+' m':''}${r.attivita?' · '+esc(r.attivita):''}</small></div><button class="btn" id="gmOpen">Apri</button>`;
   $('#gmOpen').onclick=()=>{const rr=r;$('#gm').hidden=true;openDet(rr)}}
-function gmFit(){const L=GM.recs.map(bbox).filter(Boolean);if(!L.length)return;
+function gmFit(){const L=GM.recs.map(bbox).filter(Boolean);if(GM.esplora||!L.length){centraZonaMappa();return}
   gm.fit([Math.min(...L.map(b=>b[0])),Math.min(...L.map(b=>b[1])),Math.max(...L.map(b=>b[2])),Math.max(...L.map(b=>b[3]))])}
+function centraZonaMappa(){
+  const zona=ZONE.get(GM.zona);
+  if(GM.zona==='r2'){gm.lat=45.737;gm.lon=7.32;gm.z=12;gm.draw();return}
+  if(!zona)return;
+  const [w,s,e,n]=zona.bounds;
+  gm.fit([s,w,n,e]);
+}
 function aggiornaPercorsiMappa(){
-  GM.recs=filtrate().filter(r=>r.tracks.some(t=>t.pts.length>1));
-  const nome=raccolte.find(r=>r.id===raccoltaAttiva)?.nome;
+  const lista=GM.esplora?S.recs.filter(r=>recordInZona(r,GM.zona)):filtrate();
+  GM.recs=lista.filter(r=>r.tracks.some(t=>t.pts.length>1));
+  const nome=GM.esplora?ZONE.get(GM.zona)?.nome:(raccolte.find(r=>r.id===raccoltaAttiva)?.nome||ZONE.get(GM.zona)?.nome);
   const n=GM.recs.length;
   $('#gmTit').textContent=(nome?nome+' · ':'')+n+(n===1?' percorso':' percorsi');
 }
-function gmApri(){aggiornaPercorsiMappa();
-  if(!GM.recs.length){toast('Nessun percorso da mostrare');return}
-  $('#gm').hidden=false;history.pushState({gm:1},'');GM.sel=null;gmCard();
-  if(!gm){gm=new Mappa($('#gmc'));gm.onRot=r=>{$('#gmCmpN').style.transform=`rotate(${r}rad)`;$('#gmCmpN').style.transformOrigin='23px 23px'};
+function gmApri(zona=$('#fZona').value,esplora=false){
+  GM.zona=zona;GM.esplora=esplora;
+  aggiornaPercorsiMappa();
+  if(!GM.recs.length&&!zona){toast('Nessun percorso da mostrare');return}
+  $('#gm').hidden=false;history.pushState({gm:1},'');GM.sel=null;GM.caiSel=null;GM.cai=[];gmCard();
+  if(!gm){gm=new Mappa($('#gmc'));gm.onRot=()=>disegnaNord(gm,'#gmCmpN');
     gm.layers.push(gmDraw);gm.onTap=gmTap;
     const h=Object.keys(TILES).map(k=>`<option value="${k}">${TILES[k].lab}</option>`).join('')+'<option value="none">Nessuna</option>';
     $('#gmBase').innerHTML=h;$('#gmOver').innerHTML='<option value="">+ Livello sopra: nessuno</option>'+Object.keys(OVER).map(k=>`<option value="${k}">+ ${OVER[k].lab}</option>`).join('');
     $('#gmBase').onchange=e=>{S.base=e.target.value;LSs('lg_base',S.base);gm.base=S.base;gm.ok=0;gm.err=0;gm.draw()};
     $('#gmOver').onchange=e=>{S.over=e.target.value;LSs('lg_over',S.over);gm.over=S.over;gm.draw()};
-    $('#gmCai').onclick=caiCarica;$('#gmCol').onchange=e=>{GM.mode=e.target.value;LSs('lg_gmcol',GM.mode);gmLeg();gm.draw()};$('#gmCmp').onclick=()=>gm.nord();$('#gmZi').onclick=()=>gm.zoomBy(1);$('#gmZo').onclick=()=>gm.zoomBy(-1);$('#gmZf').onclick=gmFit}
-  GM.mode=LSg('lg_gmcol')||'';$('#gmCol').value=GM.mode;gmLeg();gm.base=S.base;gm.over=S.over;$('#gmBase').value=S.base;$('#gmOver').value=S.over;
+    $('#gmCai').onclick=caiCarica;$('#gmCol').onchange=e=>{GM.mode=e.target.value;LSs('lg_gmcol',GM.mode);gmLeg();gm.draw()};$('#gmCmp').onclick=()=>scegliNord(gm);$('#gmZi').onclick=()=>gm.zoomBy(1);$('#gmZo').onclick=()=>gm.zoomBy(-1);$('#gmZf').onclick=gmFit}
+  GM.mode=LSg('lg_gmcol')||'';$('#gmCol').value=GM.mode;gmLeg();gm.base=S.base;gm.over=esplora?'vdasent':S.over;$('#gmBase').value=S.base;$('#gmOver').value=gm.over;
   gm.size();gmFit()}
 function gmChiudi(fromPop){if($('#gm').hidden)return;$('#gm').hidden=true;if(!fromPop&&history.state&&history.state.gm)history.back()}
-$('#bMap').onclick=gmApri;$('#gmBack').onclick=()=>gmChiudi();
+$('#bMap').onclick=()=>gmApri();$('#gmBack').onclick=()=>gmChiudi();
 window.addEventListener('resize',()=>{if(gm&&!$('#gm').hidden)gm.size()});
+/* Itinerari pubblicati nel Catasto della Regione Autonoma Valle d'Aosta. */
+const VDA_FONTE='Dati forniti dalla Struttura Forestazione e Sentieristica della Regione Autonoma Valle d’Aosta.';
+const VDA_URL='https://catastosentieri.regione.vda.it/';
+const VDA={caricamento:null,risultati:[],visibili:0,richiesta:0};
+function caricaItinerariVda(){
+  if(!VDA.caricamento)VDA.caricamento=fetch('sentieri-vda-2026-11-17.json')
+    .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+    .catch(e=>{VDA.caricamento=null;throw e});
+  return VDA.caricamento;
+}
+function nomeVda(row){return row[2]||[row[3],row[4]].filter(Boolean).join(' → ')||'Sentiero '+(row[1]||row[0])}
+// Alcuni codici regionali identificano più varianti.
+function nomeFileVda(row){return 'vda-'+slug(row[0])+'-'+row[8]+'.gpx'}
+function recordVda(row){
+  const nome=nomeVda(row);
+  const diff=DIF.find(d=>d.startsWith(row[5]+' '))||'';
+  const descr=[row[1]&&'Segnavia '+row[1],row[3]&&'Partenza: '+row[3],row[4]&&'Arrivo: '+row[4],
+    row[5]&&'Difficoltà regionale: '+row[5],VDA_FONTE,'CC BY 4.0 · https://creativecommons.org/licenses/by/4.0/ · Coordinate convertite in WGS84 e arrotondate a 5 decimali.'].filter(Boolean).join('\n');
+  return mk({nome,diff,descr,luogo:'Valle d’Aosta',attivita:'Escursionismo',tags:['Catasto Valle d’Aosta'],
+    fonte:'Catasto regionale Valle d’Aosta',url:VDA_URL,file:nomeFileVda(row),
+    tracks:row[7].map(line=>({name:nome,pts:[...puntiVda(line)]}))});
+}
+function filtraItinerariVda(dati,zona,testo){
+  const cerca=norm(testo).trim();
+  const parole=cerca.split(/\s+/).filter(Boolean);
+  const trovati=dati.filter(row=>{
+    const paroleSentiero=norm(row.slice(0,5).join(' '));
+    return parole.every(p=>paroleSentiero.includes(p))&&sentieroVdaInZona(row,zona);
+  });
+  const rank=r=>cerca&&[norm(r[0]),norm(r[1])].includes(cerca)?0:1;
+  return trovati.sort((a,b)=>rank(a)-rank(b)||nomeVda(a).localeCompare(nomeVda(b),'it',{numeric:true}));
+}
+function mostraItinerariVda(){
+  const box=$('#vdaLista');
+  for(let i=VDA.visibili;i<Math.min(VDA.visibili+30,VDA.risultati.length);i++){
+    const r=VDA.risultati[i];
+    const dettagli=[r[1]&&'Segnavia '+r[1],r[5]&&'Difficoltà '+r[5],[r[3],r[4]].filter(Boolean).join(' → ')].filter(Boolean);
+    const item=document.createElement('div');
+    item.className='card';
+    item.innerHTML='<b>'+esc(nomeVda(r))+'</b><div class="sub">'+dettagli.map(esc).join(' · ')+
+      '</div><div class="row" style="margin-top:8px"><button class="btn sec" data-vda="vedi">Anteprima</button>'+
+      '<button class="btn" data-vda="importa">Importa GPX</button></div>';
+    item.dataset.i=i;
+    box.append(item);
+  }
+  VDA.visibili=box.children.length;
+  $('#vdaAltro').hidden=VDA.visibili>=VDA.risultati.length;
+  $('#vdaSt').textContent=VDA.risultati.length?
+    VDA.risultati.length+' itinerari · mostrati '+VDA.visibili:'Nessun itinerario trovato.';
+}
+async function cercaItinerariVda(){
+  const richiesta=++VDA.richiesta,zona=$('#vdaZona').value,testo=$('#vdaQ').value;
+  $('#vdaSt').textContent='Carico il Catasto regionale…';
+  $('#vdaLista').replaceChildren();
+  $('#vdaAltro').hidden=true;
+  try{
+    const dati=await caricaItinerariVda();
+    if(richiesta!==VDA.richiesta)return;
+    VDA.risultati=filtraItinerariVda(dati,zona,testo);
+    VDA.visibili=0;
+    mostraItinerariVda();
+  }catch(e){
+    if(richiesta===VDA.richiesta)$('#vdaSt').textContent='Archivio regionale non disponibile. Riprova con la connessione.';
+  }
+}
+$('#vdaVai').onclick=cercaItinerariVda;
+$('#vdaAltro').onclick=mostraItinerariVda;
+$('#vdaZona').onchange=()=>{if(VDA.caricamento)cercaItinerariVda()};
+$('#vdaQ').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();cercaItinerariVda()}};
+$('#vdaMappa').onclick=()=>gmApri($('#vdaZona').value,true);
+$('#vdaLista').onclick=async e=>{
+  const btn=e.target.closest('[data-vda]');
+  if(!btn||btn.disabled)return;
+  const row=VDA.risultati[+btn.closest('[data-i]').dataset.i];
+  if(!row)return;
+  const esistente=S.recs.find(r=>r.fonte==='Catasto regionale Valle d’Aosta'&&r.file===nomeFileVda(row));
+  if(btn.dataset.vda==='vedi'){openDet(esistente||recordVda(row),!esistente);return}
+  if(esistente){toast('Itinerario già in libreria');return}
+  btn.disabled=true;
+  try{
+    const rec=recordVda(row);
+    await salva(rec);
+    renderLib();
+    toast('Importato: '+rec.nome);
+    btn.textContent='Importato';
+  }catch(e){
+    btn.disabled=false;
+    toast('Importazione non riuscita: '+e.message);
+  }
+};
+
 /* ===== scansione intelligente ===== */
 const SC={items:[],stop:false,busy:false,sel:new Set()};
 const SC_SKIP=/^(node_modules|\.git|\.svn|\$recycle\.bin|system volume information|windows|program files|program files \(x86\)|programdata|appdata|android|\.cache|cache|caches|temp|tmp|lost\+found|proc|sys|dev|\.trash|\.thumbnails|library|recovery|config\.msi)$/i;
@@ -1608,7 +1944,7 @@ async function* scWalkNat(dir,pre,dep){if(dep>16||SC.stop)return;let l;try{l=JSO
   for(const e of l){if(SC.stop)return;
     if(e.d){if(SC_SKIP.test(e.n)||(e.n[0]==='.'&&e.n.length>1))continue;yield*scWalkNat(dir+'/'+e.n,pre+e.n+'/',dep+1)}
     else{const p=dir+'/'+e.n;yield{path:pre+e.n,size:e.s,get:()=>nativoFile(p,e.n,e.m)}}}}
-async function scNativo(){if(!APP.permessoTuttiFile()){$('#scSt').textContent='Concedi «Accesso a tutti i file» a Gestore GPX nella schermata che si apre, poi torna qui e riprova.';APP.chiediPermessoTuttiFile();return}
+async function scNativo(){if(!APP.permessoTuttiFile()){$('#scSt').textContent='Concedi «Accesso a tutti i file» a LolloGpx nella schermata che si apre, poi torna qui e riprova.';APP.chiediPermessoTuttiFile();return}
   let r=[];try{r=JSON.parse(APP.radici())}catch(e){}
   $('#scRoots').innerHTML=r.map((x,i)=>`<button class="btn sec" data-r="${i}">💾 ${esc(x.nome)}</button>`).join('')+'<input type="text" id="scCust" placeholder="Oppure un percorso, es. /storage/emulated/0/Download">'+'<button class="btn sec" id="scCustGo">Scansiona questo percorso</button>';
   $('#scRoots').onclick=e=>{const b=e.target.closest('button');if(!b)return;let p,n;

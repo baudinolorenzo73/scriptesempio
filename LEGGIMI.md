@@ -1,6 +1,6 @@
-# Gestore Gpx V2.1.0
+# LolloGpx V2.4.0
 
-App Android generata con **Crea APK** (by Lollo ®2026) dall'app HTML `gestore-gpx-v2.1.0.zip` (11 file), pagina di avvio `index.html`.
+App Android generata con **Crea APK** (by Lollo ®2026) dall'app HTML `LolloGpx-v2.4.0.zip` (16 file), pagina di avvio `index.html`.
 
 ## Struttura
 - `www/` — la tua app HTML, intatta: viene messa dentro l'APK
@@ -21,4 +21,4 @@ App Android generata con **Crea APK** (by Lollo ®2026) dall'app HTML `gestore-g
 - L'app gira su `https://localhost` dentro l'APK: usa percorsi relativi, non `file://`.
 - `localStorage` e IndexedDB funzionano e restano tra un aggiornamento e l'altro (stessa chiave di firma).
 
-Pacchetto: `org.lollo.lollogpx` · versione 1.0
+Pacchetto: `org.lollo.lollogpx` · versione 1.1

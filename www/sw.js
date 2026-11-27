@@ -6,6 +6,9 @@ importScripts('versione.js'); // definisce self.VERSIONE
 
 const CACHE = 'gestore-gpx-' + self.VERSIONE;
 const FILE = [
+  "geomagnetism.js",
+  "zone.js",
+  "sentieri-vda-2026-11-17.json",
   "icone/icona-192.png",
   "icone/icona-512.png",
   "icone/icona-maskable-512.png",

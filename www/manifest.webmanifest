@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Gestore GPX",
-  "short_name": "Gestore GPX",
+  "name": "LolloGpx",
+  "short_name": "LolloGpx",
   "description": "Libreria GPX: catasto sentieri CAI, rete RPE Piemonte, difficoltà T/E/EE/EEA, mappe offline by Lollo ®2026",
   "lang": "it",
   "dir": "ltr",

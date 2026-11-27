@@ -2,7 +2,7 @@
   "name": "lollogpx",
   "version": "1.0.0",
   "private": true,
-  "description": "Gestore Gpx V2.1.0",
+  "description": "LolloGpx V2.4.0",
   "dependencies": {
     "@capacitor/android": "6.2.1",
     "@capacitor/cli": "6.2.1",

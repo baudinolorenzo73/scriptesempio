@@ -63,7 +63,9 @@
     try { sw.postMessage({ tipo: 'versione' }, [canale.port2]); } catch (x) { clearTimeout(scadenza); mostra(''); }
   }
 
+  var controllata = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (!controllata) { controllata = true; return; }
     if (ricaricato) return; ricaricato = true; location.reload();
   });
 
