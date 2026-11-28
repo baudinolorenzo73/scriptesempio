@@ -4,8 +4,8 @@
    L'elenco dei file qui sotto lo scrive crea_pwa_zip.py a ogni versione. */
 importScripts('versione.js'); // definisce self.VERSIONE
 
-const CACHE = 'gestore-gpx-' + self.VERSIONE;
-const FILE = [
+const CACHE =( 'gestore-gpx-' + self.VERSIONE)+'-brand-20261128';
+const FILE = ['./lollo-logo.png',
   "geomagnetism.js",
   "zone.js",
   "sentieri-vda-2026-11-17.json",
